@@ -26,7 +26,7 @@ const MAX_SELECTABLE_VALUES = 10;
 type GroupValue = Value & {member_count?: number};
 
 type Props = {
-    currentTeamName: string;
+    currentTeamName?: string;
     currentTeamId: string;
     intl: IntlShape;
     searchTerm: string;
@@ -248,8 +248,8 @@ export class AddGroupsToTeamModal extends React.PureComponent<Props, State> {
             </div>
         );
 
-        const buttonSubmitText = localizeMessage('multiselect.add', 'Add');
-        const buttonSubmitLoadingText = localizeMessage('multiselect.adding', 'Adding...');
+        const buttonSubmitText = localizeMessage({id: 'multiselect.add', defaultMessage: 'Add'});
+        const buttonSubmitLoadingText = localizeMessage({id: 'multiselect.adding', defaultMessage: 'Adding...'});
 
         let addError = null;
         if (this.state.addError) {
@@ -291,7 +291,7 @@ export class AddGroupsToTeamModal extends React.PureComponent<Props, State> {
                             defaultMessage='Add New Groups to {teamName} Team'
                             values={{
                                 teamName: (
-                                    <strong>{this.props.currentTeamName}</strong>
+                                    <strong>{this.props.currentTeamName ?? ''}</strong>
                                 ),
                             }}
                         />
@@ -319,7 +319,7 @@ export class AddGroupsToTeamModal extends React.PureComponent<Props, State> {
                         buttonSubmitLoadingText={buttonSubmitLoadingText}
                         saving={this.state.saving}
                         loading={this.state.loadingGroups}
-                        placeholderText={localizeMessage('multiselect.addGroupsPlaceholder', 'Search and add groups')}
+                        placeholderText={localizeMessage({id: 'multiselect.addGroupsPlaceholder', defaultMessage: 'Search and add groups'})}
                     />
                 </Modal.Body>
             </Modal>

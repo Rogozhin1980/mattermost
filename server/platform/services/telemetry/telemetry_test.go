@@ -23,10 +23,10 @@ import (
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
 	"github.com/mattermost/mattermost/server/public/plugin/plugintest"
+	"github.com/mattermost/mattermost/server/public/shared/httpservice"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
 	storeMocks "github.com/mattermost/mattermost/server/v8/channels/store/storetest/mocks"
 	"github.com/mattermost/mattermost/server/v8/config"
-	"github.com/mattermost/mattermost/server/v8/platform/services/httpservice"
 	"github.com/mattermost/mattermost/server/v8/platform/services/searchengine"
 	"github.com/mattermost/mattermost/server/v8/platform/services/telemetry/mocks"
 )
@@ -231,7 +231,7 @@ func initializeMocks(cfg *model.Config, cloudLicense bool) (*mocks.ServerIface, 
 	commandStore.On("AnalyticsCommandCount", "").Return(int64(15), nil)
 
 	webhookStore := storeMocks.WebhookStore{}
-	webhookStore.On("AnalyticsIncomingCount", "").Return(int64(16), nil)
+	webhookStore.On("AnalyticsIncomingCount", "", "").Return(int64(16), nil)
 	webhookStore.On("AnalyticsOutgoingCount", "").Return(int64(17), nil)
 
 	groupStore := storeMocks.GroupStore{}
@@ -552,9 +552,12 @@ func TestRudderTelemetry(t *testing.T) {
 				assert.Contains(t, b.Properties, "enable_testplugin")
 				assert.Contains(t, b.Properties, "version_testplugin")
 
-				// Confirm known plugins are not present
-				assert.NotContains(t, b.Properties, "enable_jira")
-				assert.NotContains(t, b.Properties, "version_jira")
+				// Confirm known plugins are present
+				assert.Contains(t, b.Properties, "enable_jira")
+				assert.Contains(t, b.Properties, "version_jira")
+
+				// Confirm it doesn't contain unknown plugins
+				assert.NotContains(t, b.Properties, "enable_something")
 			}
 		}
 	})

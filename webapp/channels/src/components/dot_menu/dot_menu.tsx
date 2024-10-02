@@ -221,7 +221,7 @@ export class DotMenuClass extends React.PureComponent<Props, State> {
     };
 
     copyText = (e: ChangeEvent) => {
-        Utils.copyToClipboard(this.props.post.message);
+        Utils.copyToClipboard(this.props.post.message_source || this.props.post.message);
         trackDotMenuEvent(e, TELEMETRY_LABELS.COPY_TEXT);
     };
 
@@ -297,7 +297,7 @@ export class DotMenuClass extends React.PureComponent<Props, State> {
         this.props.actions.setEditingPost(
             this.props.post.id,
             this.props.location === Locations.CENTER ? 'post_textbox' : 'reply_textbox',
-            this.props.post.root_id ? Utils.localizeMessage('rhs_comment.comment', 'Comment') : Utils.localizeMessage('create_post.post', 'Post'),
+            this.props.post.root_id ? Utils.localizeMessage({id: 'rhs_comment.comment', defaultMessage: 'Comment'}) : Utils.localizeMessage({id: 'create_post.post', defaultMessage: 'Post'}),
             this.props.location === Locations.RHS_ROOT || this.props.location === Locations.RHS_COMMENT || this.props.location === Locations.SEARCH,
         );
         trackDotMenuEvent(e, TELEMETRY_LABELS.EDIT);

@@ -1,17 +1,20 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React from 'react';
+import React, {lazy} from 'react';
 import type {RouteComponentProps} from 'react-router-dom';
 
-import ChannelHeader from 'components/channel_header';
+import {makeAsyncComponent} from 'components/async_load';
 import deferComponentRender from 'components/deferComponentRender';
-import FileUploadOverlay from 'components/file_upload_overlay';
 import PostView from 'components/post_view';
 
 import WebSocketClient from 'client/web_websocket_client';
 
 import type {PropsFromRedux} from './index';
+
+const ChannelHeader = makeAsyncComponent('ChannelHeader', lazy(() => import('components/channel_header')));
+const FileUploadOverlay = makeAsyncComponent('FileUploadOverlay', lazy(() => import('components/file_upload_overlay')));
+const ChannelBookmarks = makeAsyncComponent('ChannelBookmarks', lazy(() => import('components/channel_bookmarks')));
 
 export type Props = PropsFromRedux & RouteComponentProps<{
     postid?: string;
@@ -22,6 +25,7 @@ type State = {
     url: string;
     focusedPostId?: string;
     deferredPostView: any;
+    waitForLoader: boolean;
 };
 
 export default class ChannelView extends React.PureComponent<Props, State> {
@@ -71,17 +75,18 @@ export default class ChannelView extends React.PureComponent<Props, State> {
             channelId: props.channelId,
             focusedPostId: props.match.params.postid,
             deferredPostView: ChannelView.createDeferredPostView(),
+            waitForLoader: false,
         };
 
         this.channelViewRef = React.createRef();
     }
 
-    getChannelView = () => {
-        return this.channelViewRef.current;
-    };
-
     onClickCloseChannel = () => {
         this.props.goToLastViewedChannel();
+    };
+
+    onUpdateInputShowLoader = (v: boolean) => {
+        this.setState({waitForLoader: v});
     };
 
     componentDidUpdate(prevProps: Props) {
@@ -106,9 +111,8 @@ export default class ChannelView extends React.PureComponent<Props, State> {
                 className='app__content'
             >
                 <FileUploadOverlay overlayType='center'/>
-                <ChannelHeader
-                    {...this.props}
-                />
+                <ChannelHeader {...this.props}/>
+                {this.props.isChannelBookmarksEnabled && <ChannelBookmarks channelId={this.props.channelId}/>}
                 <DeferredPostView
                     channelId={this.props.channelId}
                     focusedPostId={this.state.focusedPostId}

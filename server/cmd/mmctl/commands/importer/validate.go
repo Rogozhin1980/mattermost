@@ -68,6 +68,8 @@ type Validator struct { //nolint:govet
 	directPosts    uint64
 	emojis         map[string]ImportFileInfo
 
+	maxPostSize int
+
 	start time.Time
 	end   time.Time
 
@@ -96,6 +98,7 @@ func NewValidator(
 	serverChannels map[ChannelTeam]*model.Channel,
 	serverUsers map[string]*model.User,
 	serverEmails map[string]*model.User,
+	maxPostSize int,
 ) *Validator {
 	v := &Validator{
 		archiveName:           name,
@@ -118,6 +121,8 @@ func NewValidator(
 		channels: map[ChannelTeam]ImportFileInfo{},
 		users:    map[string]ImportFileInfo{},
 		emojis:   map[string]ImportFileInfo{},
+
+		maxPostSize: maxPostSize,
 	}
 
 	v.loadFromServer()
@@ -722,7 +727,7 @@ func (v *Validator) validateUser(info ImportFileInfo, line imports.LineImportDat
 
 func (v *Validator) validatePost(info ImportFileInfo, line imports.LineImportData) (err error) {
 	ivErr := validateNotNil(info, "post", line.Post, func(data imports.PostImportData) *ImportValidationError {
-		appErr := imports.ValidatePostImportData(&data, model.PostMessageMaxRunesV1)
+		appErr := imports.ValidatePostImportData(&data, v.maxPostSize)
 		if appErr != nil {
 			return &ImportValidationError{
 				ImportFileInfo: info,
@@ -827,7 +832,17 @@ func (v *Validator) validateDirectChannel(info ImportFileInfo, line imports.Line
 			}
 		}
 
-		if data.Members != nil {
+		if data.Participants != nil {
+			for i, member := range data.Participants {
+				if _, ok := v.users[*member.Username]; !ok {
+					return &ImportValidationError{
+						ImportFileInfo: info,
+						FieldName:      fmt.Sprintf("direct_channel.members[%d]", i),
+						Err:            fmt.Errorf("reference to unknown user %q", *member.Username),
+					}
+				}
+			}
+		} else if data.Members != nil {
 			for i, member := range *data.Members {
 				if _, ok := v.users[member]; !ok {
 					return &ImportValidationError{
@@ -854,7 +869,7 @@ func (v *Validator) validateDirectChannel(info ImportFileInfo, line imports.Line
 
 func (v *Validator) validateDirectPost(info ImportFileInfo, line imports.LineImportData) (err error) {
 	ivErr := validateNotNil(info, "direct_post", line.DirectPost, func(data imports.DirectPostImportData) *ImportValidationError {
-		appErr := imports.ValidateDirectPostImportData(&data, model.PostMessageMaxRunesV1)
+		appErr := imports.ValidateDirectPostImportData(&data, v.maxPostSize)
 		if appErr != nil {
 			return &ImportValidationError{
 				ImportFileInfo: info,

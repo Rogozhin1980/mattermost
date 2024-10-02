@@ -163,7 +163,6 @@ export default class PostList extends React.PureComponent<Props, State> {
     showSearchHintThreshold: number;
     mounted: boolean;
     newMessageLineIndex: number;
-    channelViewRef: React.RefObject<HTMLDivElement>;
 
     constructor(props: Props) {
         super(props);
@@ -214,7 +213,6 @@ export default class PostList extends React.PureComponent<Props, State> {
             Math.max(postIndex + 30, Math.min((props.postListIds || []).length - 1, maxPostsForSlicing)),
         ];
         this.showSearchHintThreshold = this.getShowSearchHintThreshold();
-        this.channelViewRef = React.createRef();
     }
 
     componentDidMount() {
@@ -346,10 +344,6 @@ export default class PostList extends React.PureComponent<Props, State> {
         });
     };
 
-    getChannelView = () => {
-        return this.channelViewRef.current;
-    };
-
     onClickCloseChannel = () => {
         this.props.actions.goToLastViewedChannel();
     };
@@ -435,7 +429,7 @@ export default class PostList extends React.PureComponent<Props, State> {
                     data-testid='post-create'
                     className='post-create__container AdvancedTextEditor__ctr'
                 >
-                    <AdvancedCreatePost getChannelView={this.getChannelView}/>
+                    <AdvancedCreatePost/>
                 </div>
             );
         }
@@ -768,7 +762,7 @@ export default class PostList extends React.PureComponent<Props, State> {
                 data-a11y-focus-child={true}
                 data-a11y-order-reversed={true}
                 data-a11y-loop-navigation={false}
-                aria-label={Utils.localizeMessage('accessibility.sections.centerContent', 'message list main region')}
+                aria-label={Utils.localizeMessage({id: 'accessibility.sections.centerContent', defaultMessage: 'message list main region'})}
             >
                 {this.props.isMobileView && (
                     <React.Fragment>
