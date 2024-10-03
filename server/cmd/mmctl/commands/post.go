@@ -82,34 +82,31 @@ func postCreateCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 	}
 
 	post := &model.Post{
-		Message:   message,
-		RootId:    replyTo,
+		Message: message,
+		RootId:  replyTo,
 	}
 
 	isDmPost := strings.HasPrefix(args[0], "@")
 
 	if isDmPost {
-		otherUser := getUserFromUserArg(c, args[0])
+		otherUser := getUserFromUserArg(c, strings.Split(args[0], "@")[1])
 		if otherUser == nil {
-            return errors.New("unable to find user '" + args[0] + "'")
-        }
+			return errors.New("unable to find user '" + args[0] + "'")
+		}
 
 		me, _, err := c.GetMe(context.TODO(), "")
-		if err!= nil {
-            return errors.New("unable to get current user")
-        }
+		if err != nil {
+			return errors.New("unable to get current user")
+		}
 
-		directChannel,_, err := c.CreateDirectChannel(context.TODO(),me.Id, otherUser.Id)
-		if err!= nil {
-            return fmt.Errorf("unable to create direct channel: %s", err.Error())
-        }
+		directChannel, _, err := c.CreateDirectChannel(context.TODO(), me.Id, otherUser.Id)
+		if err != nil {
+			return fmt.Errorf("unable to create direct channel: %s", err.Error())
+		}
 
 		post.ChannelId = directChannel.Id
 		post.UserId = me.Id
-
-
-
-	}else{
+	} else {
 		channel := getChannelFromChannelArg(c, args[0])
 		if channel == nil {
 			return errors.New("unable to find channel '" + args[0] + "'")
