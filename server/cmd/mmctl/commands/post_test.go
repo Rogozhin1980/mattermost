@@ -26,7 +26,8 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		msgArg := "some text"
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{"", msgArg})
+
 
 		err := postCreateCmdF(s.client, cmd, []string{"", msgArg})
 		s.Require().EqualError(err, "Unable to find channel ''")
@@ -37,7 +38,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		replyToArg := "a-non-existing-post"
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{"", msgArg})
 		cmd.Flags().String("reply-to", replyToArg, "")
 
 		s.client.
@@ -46,7 +47,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 			Return(nil, &model.Response{}, errors.New("some-error")).
 			Times(1)
 
-		err := postCreateCmdF(s.client, cmd, []string{msgArg})
+		err := postCreateCmdF(s.client, cmd, []string{"",msgArg})
 		s.Require().Contains(err.Error(), "some-error")
 	})
 
@@ -59,7 +60,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		s.Require().NoError(err)
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{channelArg, msgArg})
 
 		s.client.
 			EXPECT().
@@ -86,7 +87,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		s.Require().NoError(err)
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{channelArg, msgArg})
 
 		s.client.
 			EXPECT().
@@ -118,7 +119,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 
 		cmd := &cobra.Command{}
 		cmd.Flags().String("reply-to", replyToArg, "")
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{msgArg})
 
 		s.client.
 			EXPECT().
