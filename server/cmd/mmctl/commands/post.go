@@ -70,27 +70,17 @@ func postCreateCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 		return errors.New("message cannot be empty")
 	}
 
-	replyTo, _ := cmd.Flags().GetString("reply-to")
-	if replyTo != "" {
-		replyToPost, _, err := c.GetPost(context.TODO(), replyTo, "")
-		if err != nil {
-			return err
-		}
-		if replyToPost.RootId != "" {
-			replyTo = replyToPost.RootId
-		}
-	}
-
 	post := &model.Post{
 		Message: message,
-		RootId:  replyTo,
 	}
 
-	isDmPost := strings.HasPrefix(args[0], "@")
-
-	if isDmPost {
-		otherUser := getUserFromUserArg(c, strings.Split(args[0], "@")[1])
-		if otherUser == nil {
+	if strings.HasPrefix(args[0], "@") {
+		userName := strings.Split(args[0], "@")[1]
+		if userName == "" {
+			return errors.New("unable to find user ''")
+		}
+		otherUser, _, err := c.GetUserByUsername(context.TODO(), userName, "")
+		if err != nil {
 			return errors.New("unable to find user '" + args[0] + "'")
 		}
 
@@ -107,6 +97,18 @@ func postCreateCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 		post.ChannelId = directChannel.Id
 		post.UserId = me.Id
 	} else {
+		replyTo, _ := cmd.Flags().GetString("reply-to")
+		if replyTo != "" {
+			replyToPost, _, err := c.GetPost(context.TODO(), replyTo, "")
+			if err != nil {
+				return err
+			}
+			if replyToPost.RootId != "" {
+				replyTo = replyToPost.RootId
+			}
+		}
+		post.RootId = replyTo
+
 		channel := getChannelFromChannelArg(c, args[0])
 		if channel == nil {
 			return errors.New("Unable to find channel '" + args[0] + "'")
