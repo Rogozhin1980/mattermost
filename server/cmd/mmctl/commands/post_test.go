@@ -26,7 +26,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		msgArg := "some text"
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{"", msgArg})
 
 		err := postCreateCmdF(s.client, cmd, []string{"", msgArg})
 		s.Require().EqualError(err, "Unable to find channel ''")
@@ -37,7 +37,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		replyToArg := "a-non-existing-post"
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{"", msgArg})
 		cmd.Flags().String("reply-to", replyToArg, "")
 
 		s.client.
@@ -46,7 +46,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 			Return(nil, &model.Response{}, errors.New("some-error")).
 			Times(1)
 
-		err := postCreateCmdF(s.client, cmd, []string{msgArg})
+		err := postCreateCmdF(s.client, cmd, []string{"", msgArg})
 		s.Require().Contains(err.Error(), "some-error")
 	})
 
@@ -59,7 +59,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		s.Require().NoError(err)
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{channelArg, msgArg})
 
 		s.client.
 			EXPECT().
@@ -77,6 +77,56 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		s.Require().Contains(err.Error(), "could not create post")
 	})
 
+	s.Run("create a direct message", func() {
+		msgArg := "some message to friend"
+		userArg := "example-user"
+		mockUser := model.User{Username: userArg}
+		mockPost := model.Post{Message: msgArg}
+		data, err := mockPost.ToJSON()
+		s.Require().NoError(err)
+
+		cmd := &cobra.Command{}
+		cmd.SetArgs([]string{userArg, msgArg})
+
+		s.client.
+			EXPECT().
+			GetUserByUsername(context.TODO(), userArg, "").
+			Return(&mockUser, &model.Response{}, nil).
+			Times(1)
+
+		s.client.
+			EXPECT().
+			GetMe(context.TODO(), "").
+			Return(&mockUser, &model.Response{}, nil).
+			Times(1)
+
+		s.client.
+			EXPECT().
+			CreateDirectChannel(context.TODO(), "", "").
+			Return(&model.Channel{}, &model.Response{}, nil).
+			Times(1)
+
+		s.client.
+			EXPECT().
+			DoAPIPost(context.TODO(), "/posts?set_online=false", data).
+			Return(nil, nil).
+			Times(1)
+
+		err = postCreateCmdF(s.client, cmd, []string{"@" + userArg, msgArg})
+		s.Require().Nil(err)
+		s.Len(printer.GetErrorLines(), 0)
+	})
+
+	s.Run("no username specified", func() {
+		msgArg := "some text"
+
+		cmd := &cobra.Command{}
+		cmd.SetArgs([]string{"", msgArg})
+
+		err := postCreateCmdF(s.client, cmd, []string{"@", msgArg})
+		s.Require().EqualError(err, "unable to find user ''")
+	})
+
 	s.Run("create a post", func() {
 		msgArg := "some text"
 		channelArg := "example-channel"
@@ -86,7 +136,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 		s.Require().NoError(err)
 
 		cmd := &cobra.Command{}
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{channelArg, msgArg})
 
 		s.client.
 			EXPECT().
@@ -118,7 +168,7 @@ func (s *MmctlUnitTestSuite) TestPostCreateCmdF() {
 
 		cmd := &cobra.Command{}
 		cmd.Flags().String("reply-to", replyToArg, "")
-		cmd.Flags().String("message", msgArg, "")
+		cmd.SetArgs([]string{msgArg})
 
 		s.client.
 			EXPECT().

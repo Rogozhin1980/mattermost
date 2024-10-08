@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -27,8 +28,8 @@ var PostCmd = &cobra.Command{
 var PostCreateCmd = &cobra.Command{
 	Use:     "create",
 	Short:   "Create a post",
-	Example: `  post create myteam:mychannel --message "some text for the post"`,
-	Args:    cobra.ExactArgs(1),
+	Example: `  post create myteam:mychannel "some text for the post"`,
+	Args:    cobra.ExactArgs(2),
 	RunE:    withClient(postCreateCmdF),
 }
 
@@ -64,31 +65,56 @@ func init() {
 }
 
 func postCreateCmdF(c client.Client, cmd *cobra.Command, args []string) error {
-	message, _ := cmd.Flags().GetString("message")
+	message := args[1]
 	if message == "" {
 		return errors.New("message cannot be empty")
 	}
 
-	replyTo, _ := cmd.Flags().GetString("reply-to")
-	if replyTo != "" {
-		replyToPost, _, err := c.GetPost(context.TODO(), replyTo, "")
-		if err != nil {
-			return err
-		}
-		if replyToPost.RootId != "" {
-			replyTo = replyToPost.RootId
-		}
-	}
-
-	channel := getChannelFromChannelArg(c, args[0])
-	if channel == nil {
-		return errors.New("Unable to find channel '" + args[0] + "'")
-	}
-
 	post := &model.Post{
-		ChannelId: channel.Id,
-		Message:   message,
-		RootId:    replyTo,
+		Message: message,
+	}
+
+	if strings.HasPrefix(args[0], "@") {
+		userName := strings.Split(args[0], "@")[1]
+		if userName == "" {
+			return errors.New("unable to find user ''")
+		}
+		otherUser, _, err := c.GetUserByUsername(context.TODO(), userName, "")
+		if err != nil {
+			return errors.New("unable to find user '" + args[0] + "'")
+		}
+
+		me, _, err := c.GetMe(context.TODO(), "")
+		if err != nil {
+			return errors.New("unable to get current user")
+		}
+
+		directChannel, _, err := c.CreateDirectChannel(context.TODO(), me.Id, otherUser.Id)
+		if err != nil {
+			return fmt.Errorf("unable to create direct channel: %s", err.Error())
+		}
+
+		post.ChannelId = directChannel.Id
+		post.UserId = me.Id
+	} else {
+		replyTo, _ := cmd.Flags().GetString("reply-to")
+		if replyTo != "" {
+			replyToPost, _, err := c.GetPost(context.TODO(), replyTo, "")
+			if err != nil {
+				return err
+			}
+			if replyToPost.RootId != "" {
+				replyTo = replyToPost.RootId
+			}
+		}
+		post.RootId = replyTo
+
+		channel := getChannelFromChannelArg(c, args[0])
+		if channel == nil {
+			return errors.New("Unable to find channel '" + args[0] + "'")
+		}
+
+		post.ChannelId = channel.Id
 	}
 
 	url := "/posts" + "?set_online=false"
