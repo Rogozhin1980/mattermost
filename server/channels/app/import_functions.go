@@ -1546,7 +1546,11 @@ func (a *App) importAttachment(rctx request.CTX, data *imports.AttachmentImportD
 		if err != nil {
 			return nil, model.NewAppError("BulkImport", "app.import.attachment.bad_file.error", map[string]any{"FilePath": *data.Path}, "", http.StatusBadRequest).Wrap(err)
 		}
-		defer zipFile.Close()
+		defer func() {
+			if cerr := zipFile.Close(); cerr != nil {
+				rctx.Logger().Warn("Failed to close zip file after import", mlog.Err(cerr))
+			}
+		}()
 		name = data.Data.Name
 		fileSize = int64(data.Data.UncompressedSize64)
 		file = zipFile
@@ -1557,7 +1561,11 @@ func (a *App) importAttachment(rctx request.CTX, data *imports.AttachmentImportD
 		if err != nil {
 			return nil, model.NewAppError("BulkImport", "app.import.attachment.bad_file.error", map[string]any{"FilePath": *data.Path}, "", http.StatusBadRequest).Wrap(err)
 		}
-		defer realFile.Close()
+		defer func() {
+			if cerr := realFile.Close(); cerr != nil {
+				rctx.Logger().Warn("Failed to close file after import", mlog.Err(cerr))
+			}
+		}()
 		name = realFile.Name()
 		file = realFile
 
@@ -1613,7 +1621,11 @@ func (a *App) importAttachment(rctx request.CTX, data *imports.AttachmentImportD
 				if err != nil {
 					return nil, model.NewAppError("BulkImport", "app.import.attachment.bad_file.error", map[string]any{"FilePath": *data.Path}, "", http.StatusBadRequest).Wrap(err)
 				}
-				defer f.Close()
+				defer func() {
+					if cerr := f.Close(); cerr != nil {
+						rctx.Logger().Warn("Failed to close reopened zip file after import", mlog.Err(cerr))
+					}
+				}()
 
 				file = f
 			}
