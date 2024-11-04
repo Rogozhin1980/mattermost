@@ -108,7 +108,6 @@ issues:
         channels/app/integration_action_test.go|\
         channels/app/job_test.go|\
         channels/app/login_test.go|\
-        channels/app/migrations.go|\
         channels/app/notification_push.go|\
         channels/app/notification_test.go|\
         channels/app/onboarding_test.go|\
