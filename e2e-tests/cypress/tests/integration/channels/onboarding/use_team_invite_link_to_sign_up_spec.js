@@ -97,7 +97,7 @@ describe('Onboarding', () => {
             // # Check that 'Email Verified' text should be visible, email is pre-filled, and password field is focused, then login
             cy.get('#input_loginId').should('have.value', email);
             cy.get('#input_password-input').should('be.visible').type(password);
-            cy.get('#saveSetting').click();
+            cy.findByTestId('saveSetting').click();
             cy.findByText('The email/username or password is invalid.').should('not.exist');
         });
 

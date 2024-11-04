@@ -3,13 +3,14 @@
 
 import React, {useCallback, useEffect, useState} from 'react';
 import {Modal} from 'react-bootstrap';
-import {FormattedMessage, useIntl} from 'react-intl';
+import {defineMessages, FormattedMessage, useIntl} from 'react-intl';
 
 import type {CustomGroupPatch, Group} from '@mattermost/types/groups';
 
 import type {ActionResult} from 'mattermost-redux/types/actions';
 
-import SaveButton from 'components/save_button';
+import Button from 'components/button';
+import SaveButton from 'components/button/save_button';
 import Input from 'components/widgets/inputs/input/input';
 
 import Constants, {ItemStatus} from 'utils/constants';
@@ -19,6 +20,12 @@ import type {ModalData} from 'types/actions';
 
 import 'components/user_groups_modal/user_groups_modal.scss';
 import './update_user_group_modal.scss';
+
+const messages = defineMessages({
+    save: {id: 'multiselect.saveDetailsButton', defaultMessage: 'Save Details'},
+    saving: {id: 'multiselect.savingDetailsButton', defaultMessage: 'Saving...'},
+    back: {id: 'multiselect.backButton', defaultMessage: 'Back'},
+});
 
 export type Props = {
     onExited: () => void;
@@ -225,22 +232,18 @@ const UpdateUserGroupModal = ({
                                 />
                             </div>
                         }
-                        <button
+                        <Button
                             onClick={onBackClick}
-                            className='btn btn-tertiary'
-                        >
-                            <FormattedMessage
-                                id='multiselect.backButton'
-                                defaultMessage='Back'
-                            />
-                        </button>
+                            emphasis='tertiary'
+                            label={messages.back}
+                        />
                         <SaveButton
-                            id='saveItems'
+                            testId='saveItems'
                             saving={saving}
                             disabled={!isSaveEnabled()}
                             onClick={onSaveClick}
-                            defaultMessage={formatMessage({id: 'multiselect.saveDetailsButton', defaultMessage: 'Save Details'})}
-                            savingMessage={formatMessage({id: 'multiselect.savingDetailsButton', defaultMessage: 'Saving...'})}
+                            defaultMessage={messages.save}
+                            savingMessage={messages.saving}
                         />
                     </div>
                 </div>
