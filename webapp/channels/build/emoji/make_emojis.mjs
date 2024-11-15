@@ -440,9 +440,8 @@ const cssRules = `.emojisprite-preview {
     background-repeat: no-repeat;
     cursor: pointer;
     -moz-transform: scale(0.5);
+    transform: scale(0.5);
     transform-origin: 0 0;
-    // Using zoom for now as it results in less blurry emojis on Chrome - MM-34178
-    zoom: 0.5;
 }
 
 .emojisprite {
@@ -453,7 +452,7 @@ const cssRules = `.emojisprite-preview {
     border-radius: 18px;
     cursor: pointer;
     -moz-transform: scale(0.35);
-    zoom: 0.35;
+    transform: scale(0.35);
 }
 
 .emojisprite-loading {
@@ -465,7 +464,7 @@ const cssRules = `.emojisprite-preview {
     border-radius: 18px;
     cursor: pointer;
     -moz-transform: scale(0.35);
-    zoom: 0.35;
+    transform: scale(0.35);
 }
 
 ${cssCats.join('\n')}
