@@ -1248,6 +1248,7 @@ var SystemEmojis = map[string]string{
 	"third_place_medal":                 "1f949",
 	"3rd_place_medal":                   "1f949",
 	"soccer":                            "26bd",
+	"world_football":                    "26bd",
 	"baseball":                          "26be",
 	"softball":                          "1f94e",
 	"basketball":                        "1f3c0",
